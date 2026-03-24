@@ -21,7 +21,6 @@ case "$ARCH" in
 esac
 
 if [ -n "${VERSION:-}" ]; then
-  # Normalize: ensure tag has a "v" prefix
   TAG="${VERSION#v}"
   TAG="v${TAG}"
   echo "Checking version: $TAG"
@@ -31,7 +30,11 @@ if [ -n "${VERSION:-}" ]; then
   fi
 else
   echo "Fetching latest release..."
-  TAG=$(curl -sSfL "$API" | grep -oP '"tag_name": "\K(.*)(?=")')
+  TAG=$(curl -sSfL "$API" | sed -n 's/.*"tag_name":[[:space:]]*"\([^"]*\)".*/\1/p' | head -n1)
+  if [ -z "$TAG" ]; then
+    echo "Error: could not determine latest release tag"
+    exit 1
+  fi
   echo "Latest version: $TAG"
 fi
 
